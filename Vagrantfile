@@ -49,4 +49,21 @@ Vagrant.configure("2") do |config|
     auth.vm.provision "shell", path: "scripts/auth_setup.sh"
   end
 
+  # -------------------------
+  # USERS API
+  # -------------------------
+
+  config.vm.define "users-api" do |users|
+  users.vm.hostname = "users-api"
+
+  users.vm.network "private_network", ip: "192.168.56.21"
+
+    users.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.cpus = 1
+    end
+
+   users.vm.provision "shell", path: "scripts/users_setup.sh"
+  end
+
 end
