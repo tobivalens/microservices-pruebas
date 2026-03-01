@@ -1,12 +1,20 @@
-FROM golang:1.18-alpine
+# Build stage
+FROM golang:1.18-alpine AS builder
 
-WORKDIR /go/src/auth-api
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . .
-
-ENV GO111MODULE=off
-
 RUN go build -o auth-api
+
+# Runtime stage
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/auth-api .
 
 EXPOSE 8000
 
