@@ -4,7 +4,6 @@ WORKDIR /app
 
 COPY . .
 
-# Crear go.mod automáticamente si no existe
 RUN go mod init auth-api || true
 RUN go mod tidy
 
@@ -17,4 +16,3 @@ ENV USERS_API_ADDRESS=http://192.168.56.21:8083
 ENV JWT_SECRET=PRFT
 
 CMD ["./auth-api"]
-

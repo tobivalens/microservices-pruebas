@@ -1,4 +1,3 @@
-# Build stage
 FROM maven:3.8.6-eclipse-temurin-8 AS builder
 
 WORKDIR /app
@@ -7,8 +6,6 @@ COPY . .
 
 RUN mvn clean package -DskipTests
 
-
-# Runtime stage
 FROM eclipse-temurin:8-jre-alpine
 
 WORKDIR /app
@@ -20,4 +17,4 @@ EXPOSE 8083
 ENV JWT_SECRET=PRFT
 ENV SERVER_PORT=8083
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java","-jar","app.jar"]

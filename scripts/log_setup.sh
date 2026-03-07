@@ -1,11 +1,18 @@
 #!/bin/bash
 
 sudo apt update -y
-sudo apt install docker.io -y
+sudo apt install -y docker.io git
+
 sudo systemctl enable docker
 sudo systemctl start docker
 
-cd /home/vagrant/microservice-app-example-v/log-message-processor
+rm -rf microservice-app-example-v
+
+git clone https://github.com/tobivalens/microservice-app-example-v.git
+
+cd microservice-app-example-v/log-message-processor
+
+sudo docker rm -f log-processor || true
 
 sudo docker build -t log-processor .
 

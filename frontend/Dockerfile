@@ -3,6 +3,7 @@ FROM node:8
 WORKDIR /app
 
 COPY package*.json ./
+
 RUN npm install
 
 COPY . .
@@ -11,6 +12,6 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV AUTH_API_ADDRESS=http://192.168.56.20:8000
-ENV TODOS_API_ADDRESS=http://192.168.56.30:8082
+ENV TODOS_API_ADDRESS=http://192.168.56.22:8082
 
-CMD ["npm", "start"]
+CMD ["npm","start"]
