@@ -8,4 +8,6 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python3","main.py"]
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python3","-u","main.py"]

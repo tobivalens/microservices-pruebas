@@ -121,4 +121,42 @@ Vagrant.configure("2") do |config|
     log.vm.provision "shell", path: "scripts/log_setup.sh"
   end
 
+
+  # -------------------------
+  # Zipkin
+  # -------------------------
+
+  config.vm.define "zip" do |zip|
+   zip.vm.hostname = "zip"
+
+    zip.vm.network "private_network", ip: "192.168.56.25"
+
+    zip.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.cpus = 1
+    end
+
+    zip.vm.provision "shell", path: "scripts/zipkin_setup.sh"
+  end
+
+
+
+  # -------------------------
+  # VM FRONTEND 2 (redundancia)
+  # -------------------------
+
+  config.vm.define "frontend2" do |frontend2|
+   frontend2.vm.hostname = "frontend2"
+
+    frontend2.vm.network "private_network", ip: "192.168.56.26"
+
+    frontend2.vm.provider "virtualbox" do |vb|
+      vb.memory = 512
+      vb.cpus = 1
+    end
+
+    frontend2.vm.provision "shell", path: "scripts/frontend_setup.sh"
+  end
+
+
 end
