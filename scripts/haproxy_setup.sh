@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 sudo apt update -y
 sudo apt install -y haproxy
@@ -20,7 +21,7 @@ frontend http_front
 
 backend http_back
     balance roundrobin
-    server frontend1 192.168.56.11:3000 check
+    server frontend1 192.168.56.11:8080 check
 EOF'
 
 sudo systemctl restart haproxy

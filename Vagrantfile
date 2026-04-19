@@ -1,6 +1,7 @@
 Vagrant.configure("2") do |config|
 
   config.vm.box = "ubuntu/jammy64"
+  config.vm.synced_folder ".", "/vagrant"
 
   # -------------------------
   # HAPROXY

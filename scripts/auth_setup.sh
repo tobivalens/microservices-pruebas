@@ -1,19 +1,15 @@
 #!/bin/bash
+set -e
 
 sudo apt update -y
 sudo apt install -y docker.io git
 
-sudo systemctl start docker
 sudo systemctl enable docker
+sudo systemctl start docker
 
-rm -rf microservice-app-example-v
-
-git clone https://github.com/tobivalens/microservice-app-example-v.git
-
-cd microservice-app-example-v/auth-api
+cd /vagrant/auth-api
 
 sudo docker rm -f auth-api || true
-
 sudo docker build -t auth-api .
 
 sudo docker run -d \
