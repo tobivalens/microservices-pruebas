@@ -1,4 +1,4 @@
-FROM node:14
+FROM node:8
 
 WORKDIR /app
 
@@ -18,4 +18,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm","run","serve"]
+CMD ["npm","start"]

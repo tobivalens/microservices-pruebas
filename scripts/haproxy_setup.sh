@@ -17,11 +17,18 @@ defaults
 
 frontend http_front
     bind *:80
-    default_backend http_back
 
-backend http_back
+    acl is_zipkin path_beg /zipkin
+    use_backend zipkin_back if is_zipkin
+
+    default_backend frontend_back
+
+backend frontend_back
     balance roundrobin
-    server frontend1 192.168.56.11:8080 check
+    server frontend1 192.168.56.11:3000 check
+
+backend zipkin_back
+    server zipkin1 192.168.56.25:9411 check
 EOF'
 
 sudo systemctl restart haproxy

@@ -8,9 +8,9 @@ sudo systemctl enable docker
 
 sudo docker rm -f zipkin || true
 
-sudo docker run -d \
+docker run -d \
   -p 9411:9411 \
   -e STORAGE_TYPE=mem \
-  -e QUERY_BASE_PATH=/ \
+  -e JAVA_OPTS="-Xms256m -Xmx512m" \
   --name zipkin \
-  openzipkin/zipkin
+  openzipkin/zipkin:2
