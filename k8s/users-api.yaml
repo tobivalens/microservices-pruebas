@@ -1,0 +1,44 @@
+# ─────────────────────────────────────────
+# USERS-API  ·  Spring Boot  ·  puerto 8083
+# ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users-api
+  template:
+    metadata:
+      labels:
+        app: users-api
+    spec:
+      containers:
+        - name: users-api
+          image: kaeltobias/users-api:v1
+          ports:
+            - containerPort: 8083
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: JWT_SECRET
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SERVER_PORT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-api
+spec:
+  selector:
+    app: users-api
+  ports:
+    - port: 8083
+      targetPort: 8083

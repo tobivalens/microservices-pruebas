@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────
+# LOG-MESSAGE-PROCESSOR  ·  Python
+# Solo Deployment, sin Service (no recibe tráfico, solo lee de Redis)
+# ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-processor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-processor
+  template:
+    metadata:
+      labels:
+        app: log-processor
+    spec:
+      containers:
+        - name: log-processor
+          image: kaeltobias/log-processor:v1
+          env:
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REDIS_PORT
+            - name: REDIS_CHANNEL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REDIS_CHANNEL

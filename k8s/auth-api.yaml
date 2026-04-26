@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────
+# AUTH-API  ·  Go  ·  puerto 8000
+# Depende de users-api → arrancamos users-api primero
+# ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-api
+  template:
+    metadata:
+      labels:
+        app: auth-api
+    spec:
+      containers:
+        - name: auth-api
+          image: kaeltobias/auth-api:v1
+          ports:
+            - containerPort: 8000
+          env:
+            - name: AUTH_API_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: AUTH_API_PORT
+            - name: JWT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: JWT_SECRET
+            - name: USERS_API_ADDRESS
+              value: "http://users-api:8083"   # nombre del Service de users-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-api
+spec:
+  selector:
+    app: auth-api
+  ports:
+    - port: 8000
+      targetPort: 8000

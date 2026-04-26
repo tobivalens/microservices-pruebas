@@ -1,0 +1,46 @@
+# ─────────────────────────────────────────
+# FRONTEND  ·  Vue  ·  puerto 8080
+# NodePort para acceder desde el navegador (minikube)
+# ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: kaeltobias/frontend:v1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: PORT
+            - name: AUTH_API_ADDRESS
+              value: "http://auth-api:8000"
+            - name: TODOS_API_ADDRESS
+              value: "http://todos-api:8082"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: NodePort          # NodePort = accesible desde fuera del cluster con minikube
+  selector:
+    app: frontend
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080     # tú accedes por localhost:30080 (o minikube ip:30080)
