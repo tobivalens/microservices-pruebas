@@ -6,6 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: log-processor
+  namespace: backend
 spec:
   replicas: 1
   selector:
@@ -15,6 +16,7 @@ spec:
     metadata:
       labels:
         app: log-processor
+        tier: backend
     spec:
       containers:
         - name: log-processor

@@ -1,0 +1,22 @@
+# Los namespaces son los "contenedores lógicos" del cluster.
+# El label es clave: las NetworkPolicies los referencian por label, no por nombre.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: frontend
+  labels:
+    tier: frontend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backend
+  labels:
+    tier: backend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data
+  labels:
+    tier: data

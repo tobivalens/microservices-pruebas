@@ -1,0 +1,219 @@
+# ══════════════════════════════════════════════════════════════════════
+# NETWORK POLICIES
+# Patrón: primero DENEGAR TODO, luego PERMITIR solo lo necesario.
+# Esto aplica por namespace completo con podSelector: {}
+# ══════════════════════════════════════════════════════════════════════
+
+
+# ──────────────────────────────────────────────────────────────────────
+# 1. DENY ALL  ·  namespace: frontend
+#    Bloquea todo ingress y egress por defecto.
+#    Las políticas siguientes abren solo lo necesario.
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: frontend
+spec:
+  podSelector: {}          # aplica a TODOS los pods del namespace
+  policyTypes:
+    - Ingress
+    - Egress
+  # ingress y egress vacíos = denegar todo
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 2. ALLOW INGRESS INTERNET → frontend
+#    El frontend debe ser alcanzable desde el navegador (internet).
+#    En Kubernetes esto viene del NodePort, el tráfico llega sin
+#    namespaceSelector, así que permitimos ingress sin restricción de origen.
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-internet
+  namespace: frontend
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - {}                   # permite tráfico desde cualquier origen (internet)
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 3. ALLOW EGRESS frontend → backend
+#    El frontend necesita hablar con auth-api y todos-api.
+#    También necesita salida al DNS del cluster (puerto 53).
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-backend
+  namespace: frontend
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              tier: backend          # apunta al namespace backend por su label
+      ports:
+        - port: 8000                 # auth-api
+        - port: 8082                 # todos-api
+    - to:                            # DNS: sin esto los nombres como auth-api.backend... no resuelven
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 4. DENY ALL  ·  namespace: backend
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: backend
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 5. ALLOW INGRESS frontend → backend (auth-api y todos-api)
+#    Solo el namespace frontend puede iniciar conexiones al backend.
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-frontend
+  namespace: backend
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              tier: frontend         # solo viene del namespace frontend
+      ports:
+        - port: 8000                 # auth-api
+        - port: 8082                 # todos-api
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 6. ALLOW INGRESS interno backend → backend
+#    auth-api necesita hablar con users-api (mismo namespace).
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-internal-backend
+  namespace: backend
+spec:
+  podSelector:
+    matchLabels:
+      app: users-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              tier: backend
+          podSelector:
+            matchLabels:
+              app: auth-api          # solo auth-api puede llamar a users-api
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 7. ALLOW EGRESS backend → data (Redis) + interno + DNS
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-backend
+  namespace: backend
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              tier: data             # hacia Redis en namespace data
+      ports:
+        - port: 6379
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              tier: backend          # tráfico interno (auth→users)
+      ports:
+        - port: 8083
+    - to:                            # DNS
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 8. DENY ALL  ·  namespace: data
+#    Redis queda completamente aislado por defecto.
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: data
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 9. ALLOW INGRESS backend → data (Redis)
+#    Solo los pods del namespace backend pueden hablar con Redis.
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-backend
+  namespace: data
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              tier: backend          # solo viene del namespace backend
+      ports:
+        - port: 6379
+# Egress de Redis: no necesita salir a ningún lado → sigue bloqueado

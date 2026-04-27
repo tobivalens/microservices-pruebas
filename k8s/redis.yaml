@@ -5,6 +5,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
+  namespace: data
 spec:
   replicas: 1
   selector:
@@ -14,6 +15,7 @@ spec:
     metadata:
       labels:
         app: redis
+        tier: data
     spec:
       containers:
         - name: redis
@@ -24,7 +26,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis          # <── otros pods lo llaman por este nombre
+  name: redis
+  namespace: data    # <── otros pods lo llaman por este nombre
 spec:
   selector:
     app: redis

@@ -6,6 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-api
+  namespace: backend
 spec:
   replicas: 1
   selector:
@@ -15,6 +16,7 @@ spec:
     metadata:
       labels:
         app: auth-api
+        tier: backend
     spec:
       containers:
         - name: auth-api
@@ -33,12 +35,13 @@ spec:
                   name: app-config
                   key: JWT_SECRET
             - name: USERS_API_ADDRESS
-              value: "http://users-api:8083"   # nombre del Service de users-api
+              value: "http://users-api.backend.svc.cluster.local:8083"   # nombre del Service de users-api
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: auth-api
+  namespace: backend
 spec:
   selector:
     app: auth-api
