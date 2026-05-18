@@ -23,6 +23,13 @@ spec:
           image: kaeltobias/auth-api:v1
           ports:
             - containerPort: 8000
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
           env:
             - name: AUTH_API_PORT
               valueFrom:
@@ -35,7 +42,13 @@ spec:
                   name: app-config
                   key: JWT_SECRET
             - name: USERS_API_ADDRESS
-              value: "http://users-api.backend.svc.cluster.local:8083"   # nombre del Service de users-api
+              value: "http://users-api.backend.svc.cluster.local:8083"
+            # NUEVO: inyectar ZIPKIN_URL para activar el tracing en auth-api
+            - name: ZIPKIN_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ZIPKIN_URL
 ---
 apiVersion: v1
 kind: Service
@@ -48,3 +61,4 @@ spec:
   ports:
     - port: 8000
       targetPort: 8000
+

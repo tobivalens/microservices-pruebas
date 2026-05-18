@@ -22,6 +22,13 @@ spec:
           image: kaeltobias/users-api:v1
           ports:
             - containerPort: 8083
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "400m"
           env:
             - name: JWT_SECRET
               valueFrom:
@@ -45,3 +52,4 @@ spec:
   ports:
     - port: 8083
       targetPort: 8083
+

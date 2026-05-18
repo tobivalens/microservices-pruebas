@@ -1,6 +1,7 @@
 # ─────────────────────────────────────────
 # FRONTEND  ·  Vue  ·  puerto 8080
 # NodePort para acceder desde el navegador (minikube)
+# Fix: aumentar memoria - el dev-server de Webpack necesita al menos 512Mi
 # ─────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
@@ -16,13 +17,20 @@ spec:
     metadata:
       labels:
         app: frontend
-        tier: frontendi
+        tier: frontend
     spec:
       containers:
         - name: frontend
           image: kaeltobias/frontend:v1
           ports:
             - containerPort: 8080
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "768Mi"   # Webpack dev-server necesita bastante RAM
+              cpu: "500m"
           env:
             - name: PORT
               valueFrom:
@@ -33,6 +41,13 @@ spec:
               value: "http://auth-api.backend.svc.cluster.local:8000"
             - name: TODOS_API_ADDRESS
               value: "http://todos-api.backend.svc.cluster.local:8082"
+            - name: ZIPKIN_URL
+              value: "http://zipkin.observability.svc.cluster.local:9411/api/v2/spans"
+
+            # Limitar memoria del proceso Node explícitamente
+            #
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=512"
 ---
 apiVersion: v1
 kind: Service
@@ -40,10 +55,10 @@ metadata:
   name: frontend
   namespace: frontend
 spec:
-  type: NodePort          # NodePort = accesible desde fuera del cluster con minikube
+  type: NodePort
   selector:
     app: frontend
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 30080     # tú accedes por localhost:30080 (o minikube ip:30080)
+      nodePort: 30080

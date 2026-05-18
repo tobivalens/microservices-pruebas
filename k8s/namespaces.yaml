@@ -20,3 +20,12 @@ metadata:
   name: data
   labels:
     tier: data
+---
+# NUEVO: namespace para Zipkin y herramientas de observabilidad
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+  labels:
+    tier: observability
+

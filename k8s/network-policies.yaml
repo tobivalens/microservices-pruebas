@@ -64,18 +64,23 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
-              tier: backend          # apunta al namespace backend por su label
+              tier: backend
       ports:
-        - port: 8000                 # auth-api
-        - port: 8082                 # todos-api
-    - to:                            # DNS: sin esto los nombres como auth-api.backend... no resuelven
+        - port: 8000
+        - port: 8082
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              tier: observability   # ← NUEVO
+      ports:
+        - port: 9411                # ← NUEVO
+    - to:
         - namespaceSelector: {}
       ports:
         - port: 53
           protocol: UDP
         - port: 53
           protocol: TCP
-
 ---
 # ──────────────────────────────────────────────────────────────────────
 # 4. DENY ALL  ·  namespace: backend
@@ -216,4 +221,53 @@ spec:
               tier: backend          # solo viene del namespace backend
       ports:
         - port: 6379
-# Egress de Redis: no necesita salir a ningún lado → sigue bloqueado
+
+          
+          # Egress de Redis: no necesita salir a ningún lado → sigue bloqueado
+          #
+          #
+          
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 10. DENY ALL · namespace: observability
+#     Zipkin aislado por defecto
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: observability
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# ──────────────────────────────────────────────────────────────────────
+# 11. ALLOW INGRESS → Zipkin desde backend y frontend
+#     backend y frontend envían trazas a Zipkin (puerto 9411)
+# ──────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-zipkin
+  namespace: observability
+spec:
+  podSelector:
+    matchLabels:
+      app: zipkin
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              tier: backend
+        - namespaceSelector:
+            matchLabels:
+              tier: frontend
+      ports:
+        - port: 9411
+
